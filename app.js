@@ -8,17 +8,17 @@ app.use(express.json());
 
 
 let comments = [];
-const fs = require('fs');
+ const fs = require('fs');
 
-const data = fs.readFileSync('./fakedb/comments.json',
-    { encoding: 'utf8' });
-comments = JSON.parse(data);
+// const data = fs.readFileSync('./fakedb/comments.json',
+//     { encoding: 'utf8' });
+// comments = JSON.parse(data);
 
 
-// fs.readFile('./fakedb/comments.json', (err, data) => {   // Asynchronous file read
-//     comments = JSON.parse(data);
-// });
-//console.log(comments);        // Won't be shown unless you use the synchronous function
+fs.readFile('./fakedb/comments.json', (err, data) => {   // Asynchronous file read
+    comments = JSON.parse(data);
+    console.log(comments);        // Won't be shown unless you use the synchronous function
+})
 
 //comment
 // {
@@ -70,9 +70,9 @@ app.get("/:id", (req, res) => {
 app.post("/", (req, res) => {
     console.log("POST Request from /");
     const avatar = req.body.avatar;
+    console.log("avatar is : " + avatar);
     const message = req.body.message;
     const author = req.body.author;
-
     if (!avatar || !message || !author) {
         res.status(418).send("Nu a mers");
     }
