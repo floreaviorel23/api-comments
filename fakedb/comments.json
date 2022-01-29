@@ -1,0 +1,37 @@
+[
+    {
+        "avatar": "すき",
+        "message": "suki",
+        "author": "me1",
+        "createdAt": "now",
+        "editedAt": "now"
+    },
+    {
+        "avatar": "み",
+        "message": "mi",
+        "author": "me2",
+        "createdAt": "now",
+        "editedAt": "now"
+    },
+    {
+        "avatar": "ぢく",
+        "message": "diku",
+        "author": "me3",
+        "createdAt": "now",
+        "editedAt": "now"
+    },
+    {
+        "avatar": "にげる",
+        "message": "nigeru",
+        "author": "me4",
+        "createdAt": "now",
+        "editedAt": "now"
+    },
+    {
+        "avatar": "くん",
+        "message": "kun",
+        "author": "me5",
+        "createdAt": "now",
+        "editedAt": "now"
+    }
+]
