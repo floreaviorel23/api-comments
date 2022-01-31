@@ -4,21 +4,111 @@ const PORT = 3000;
 app.use(express.json());
 
 
-
-
-
 let comments = [];
- const fs = require('fs');
+
+let Connection = require('tedious').Connection;
+let config = {
+    server: "192.168.0.102", // or "localhost"
+    options: {
+        database: "commentsdb",
+        encrypt: false,
+        trustServerCertificate: true
+    },
+    authentication: {
+        type: "default",
+        options: {
+            userName: "dev123",
+            password: "dev123",
+        }
+    }
+};
+
+
+
+
+function getAllComments() {
+    const prom = new Promise((resolve, reject) => {
+        comments = [];
+        let connection = new Connection(config);
+
+        connection.connect((err) => {
+            if (err) {
+                console.log('Error: ', err)
+            }
+            else {
+                console.log("Connected to db : " + config.options.database);
+                let sql = 'SELECT * FROM comments';
+                let dbrequest = makeRequest(sql);
+
+                dbrequest.on('row', (columns) => {
+                    pushCommentToArray(columns);
+                });
+
+                dbrequest.on('requestCompleted', () => {
+                    //console.log(comments);
+                    console.log("Request completed");
+                    connection.close();
+                    resolve("success");
+                });
+
+                connection.execSql(dbrequest);
+            }
+        });
+    });
+    return prom;
+}
+
+
+
+
+
+
+function makeRequest(sql) {
+    let Request = require('tedious').Request;
+    const dbrequest = new Request(sql, (err, rowCount) => {
+        if (err) {
+            console.log("err : ", err);
+        }
+        else {
+            console.log("no err");
+            console.log("Row count : " + rowCount);
+        }
+    });
+    return dbrequest;
+}
+
+
+
+function pushCommentToArray(columns) {
+    let avatar = columns[1].value;
+    let message = columns[2].value;
+    let author = columns[3].value;
+    let createdAt = columns[4].value;
+    let editedAt = columns[5].value;
+
+    let com = {};
+    com.avatar = avatar;
+    com.message = message;
+    com.author = author;
+    com.createdAt = createdAt;
+    com.editedAt = editedAt;
+
+    comments.push(com);
+}
+
+
+
+//const fs = require('fs');
 
 // const data = fs.readFileSync('./fakedb/comments.json',
 //     { encoding: 'utf8' });
 // comments = JSON.parse(data);
 
 
-fs.readFile('./fakedb/comments.json', (err, data) => {   // Asynchronous file read
-    comments = JSON.parse(data);
-    console.log(comments);        // Won't be shown unless you use the synchronous function
-})
+// fs.readFile('./fakedb/comments.json', (err, data) => {   // Asynchronous file read
+//     comments = JSON.parse(data);
+//     console.log(comments);        // Won't be shown unless you use the synchronous function
+// })
 
 //comment
 // {
@@ -39,8 +129,9 @@ app.listen(PORT, () => {
 
 
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
     console.log("GET Request from /");
+    await getAllComments();
     res.status(200);
     res.send(`${JSON.stringify(comments)}`);
 });
