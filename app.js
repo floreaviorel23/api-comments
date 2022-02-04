@@ -22,6 +22,30 @@ let config = {
         }
     }
 };
+let connection = new Connection(config);
+
+
+
+
+
+
+function dbConnection() {
+    connection.connect((err) => {
+        if (err) {
+            console.log('Error: ', err)
+        }
+        else {
+            console.log("Connected to db : " + config.options.database);
+        }
+    });
+}
+
+dbConnection();
+
+
+
+
+
 
 
 
@@ -29,31 +53,60 @@ let config = {
 function getAllComments() {
     const prom = new Promise((resolve, reject) => {
         comments = [];
-        let connection = new Connection(config);
+        let sql = 'exec SelectAllComments';
+        let dbrequest = makeSelectRequest(sql);
 
-        connection.connect((err) => {
-            if (err) {
-                console.log('Error: ', err)
-            }
-            else {
-                console.log("Connected to db : " + config.options.database);
-                let sql = 'SELECT * FROM comments';
-                let dbrequest = makeRequest(sql);
-
-                dbrequest.on('row', (columns) => {
-                    pushCommentToArray(columns);
-                });
-
-                dbrequest.on('requestCompleted', () => {
-                    //console.log(comments);
-                    console.log("Request completed");
-                    connection.close();
-                    resolve("success");
-                });
-
-                connection.execSql(dbrequest);
-            }
+        dbrequest.on('row', (columns) => {
+            pushCommentToArray(columns);
         });
+        dbrequest.on('requestCompleted', () => {
+            //console.log("Request completed");
+            resolve("success");
+        });
+
+        connection.execSql(dbrequest);
+    });
+    return prom;
+}
+
+
+function makeSelectRequest(sql) {
+    let Request = require('tedious').Request;
+    const dbrequest = new Request(sql, (err, rowCount) => {
+        if (err) {
+            console.log("err get: ", err);
+        }
+        else {
+            //console.log("no err get");
+            //console.log("Row count : " + rowCount);
+        }
+    });
+    return dbrequest;
+}
+
+
+
+
+
+function getComment(uuid) {
+    const prom = new Promise((resolve, reject) => {
+
+        let sql = `exec SelectComment "${uuid}"`;
+        let dbrequest = makeSelectRequest(sql);
+        let com = {};
+
+        dbrequest.on('row', (columns) => {
+            const [uuid, avatar, message, author, createdAt, editedAt] =
+                [columns[1].value, columns[2].value, columns[3].value, columns[4].value, columns[5].value, columns[6].value];
+            com = { avatar, message, author, createdAt, editedAt };
+        });
+
+        dbrequest.on('requestCompleted', () => {
+            //console.log("Request completed get uuid");
+            resolve(com);
+        });
+
+        connection.execSql(dbrequest);
     });
     return prom;
 }
@@ -63,38 +116,84 @@ function getAllComments() {
 
 
 
-function makeRequest(sql) {
-    let Request = require('tedious').Request;
-    const dbrequest = new Request(sql, (err, rowCount) => {
-        if (err) {
-            console.log("err : ", err);
-        }
-        else {
-            console.log("no err");
-            console.log("Row count : " + rowCount);
-        }
-    });
-    return dbrequest;
-}
-
-
 
 function pushCommentToArray(columns) {
-    let avatar = columns[1].value;
-    let message = columns[2].value;
-    let author = columns[3].value;
-    let createdAt = columns[4].value;
-    let editedAt = columns[5].value;
-
-    let com = {};
-    com.avatar = avatar;
-    com.message = message;
-    com.author = author;
-    com.createdAt = createdAt;
-    com.editedAt = editedAt;
+    const [avatar, message, author, createdAt, editedAt] =
+        [columns[2].value, columns[3].value, columns[4].value, columns[5].value, columns[6].value];
+    let com = { avatar, message, author, createdAt, editedAt };
 
     comments.push(com);
 }
+
+
+
+
+
+
+
+
+
+
+
+function insertNewComment(comment) {
+    const prom = new Promise((resolve, reject) => {
+
+        let sql = `exec InsertNewComment "${comment.avatar}", "${comment.message}", "${comment.author}"`;
+        let Request = require('tedious').Request;
+        const dbrequest = new Request(sql, (err, rowCount) => {
+            if (err) {
+                console.log("err post: ", err);
+            }
+            else {
+                //console.log("no err");
+                //console.log("Row count : " + rowCount);
+            }
+        });
+
+
+        dbrequest.on('requestCompleted', () => {
+            //console.log("Request completed post");
+            resolve("success");
+        });
+
+        connection.execSql(dbrequest);
+    });
+    return prom;
+}
+
+
+
+function removeComment(uuid) {
+    const prom = new Promise((resolve, reject) => {
+
+        let sql = `exec DeleteComment "${uuid}"`;
+        let Request = require('tedious').Request;
+        const dbrequest = new Request(sql, (err, rowCount) => {
+            if (err) {
+                //reject("failed removeComment");
+                console.log("err delete: ", err);
+            }
+            else {
+                //console.log("no err");
+                //console.log("Row count : " + rowCount);
+            }
+        });
+
+
+        dbrequest.on('requestCompleted', () => {
+            //console.log("Request completed post");
+            resolve("success");
+        });
+
+        connection.execSql(dbrequest);
+    });
+    return prom;
+}
+
+
+
+
+
 
 
 
@@ -121,6 +220,12 @@ function pushCommentToArray(columns) {
 
 
 
+
+
+
+
+
+
 app.listen(PORT, () => {
     console.log("It's alive on port : " + PORT);
 });
@@ -139,17 +244,19 @@ app.get("/", async (req, res) => {
 
 
 
-app.get("/:id", (req, res) => {
-    console.log("GET Request from /id");
-    const id = req.params.id;
-    if (!isNaN(id) && id < comments.length && id >= 0) {
-        res.status(200);
-        res.send(`${JSON.stringify(comments[id])}`);
-    }
-    else {
+app.get("/:uuid", async (req, res) => {
+    console.log("GET Request from /uuid");
+    const uuid = req.params.uuid;
+    const result = await getComment(uuid);
+
+    if (Object.keys(result).length === 0 && result.constructor === Object) {
         res.status(400);
-        res.send("PP, I mean id is too big D:");
+        res.send("ID not found");
+    } else {
+        res.status(200);
+        res.send(`${JSON.stringify(result)}`);
     }
+
 });
 
 
@@ -158,18 +265,16 @@ app.get("/:id", (req, res) => {
 
 
 
-app.post("/", (req, res) => {
+app.post("/", async (req, res) => {
     console.log("POST Request from /");
-    const avatar = req.body.avatar;
-    console.log("avatar is : " + avatar);
-    const message = req.body.message;
-    const author = req.body.author;
+    const [avatar, message, author] = [req.body.avatar, req.body.message, req.body.author];
+
     if (!avatar || !message || !author) {
         res.status(418).send("Nu a mers");
     }
     else {
-        let com = createComment(avatar, message, author);
-        comments.push(com);
+        let com = { avatar, message, author };
+        await insertNewComment(com);
         res.status(200);
         res.send("Comment successfuly added");
     }
@@ -179,19 +284,14 @@ app.post("/", (req, res) => {
 
 
 
-app.delete("/:id", (req, res) => {
-    console.log("DELETE Request from /id");
-    const id = req.params.id;
-    if (!isNaN(id) && id < comments.length && id >= 0) {
-        res.status(200);
-        res.send(`${JSON.stringify(comments[id])}`);
-        comments.splice(id, 1);         //removed from comments array (database)
+app.delete("/:uuid", async (req, res) => {
+    console.log("DELETE Request from /uuid");
+    const uuid = req.params.uuid;
 
-    }
-    else {
-        res.status(400);
-        res.send("Oh no it do be not working");
-    }
+    const result = await removeComment(uuid);
+    res.status(200);
+    res.send("Deleted from db");
+
 });
 
 
@@ -219,18 +319,6 @@ app.put("/:id", (req, res) => {
 
 
 
-
-
-
-function createComment(avatar, message, author) {
-    let com = {};
-    com.avatar = avatar;
-    com.message = message;
-    com.author = author;
-    com.createdAt = new Date();
-    com.editedAt = new Date();
-    return com;
-}
 
 
 function updateComment(id, avatar2, message2, author2) {
