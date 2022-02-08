@@ -12,11 +12,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 // - - - - - - - - - - Set public path - - - - - - - - -
-app.set(express.static(path.join(__dirname, 'public')));
-app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')))
-
-
-
+app.use(express.static(path.join(__dirname, 'public')));
+//app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')))
+//app.use('/css', express.static(path.join(__dirname, 'public/css')))
 
 // - - - - - - - - - - Database config - - - - - - - - -
 let Connection = require('tedious').Connection;
@@ -48,7 +46,7 @@ function dbConnection() {
         }
     });
 }
-dbConnection();
+//dbConnection();
 
 
 
@@ -62,9 +60,10 @@ app.listen(PORT, () => {
 app.get("/", async (req, res) => {
     console.log("GET Request from /");
     try {
-        await getAllComments();
+        //await getAllComments();
         res.status(200);
-        res.render('index', toSend);
+        res.render('index');
+        // res.render('index', toSend);
         //res.send(`${JSON.stringify(comments)}`);
     }
     catch (err) {
