@@ -14,12 +14,12 @@ html(lang="en")
         .container.bg-primary.mt-5
             p DADA
 
-        //- .container
-        //-     each com in comments
-        //-         .mb-5.border.border-dark.px-4
-        //-             p #{com.uuid}
-        //-             p #{com.avatar}
-        //-             p #{com.message}
-        //-             p #{com.author}
-        //-             p #{com.createdAt}
-        //-             p #{com.editedAt}
+        .container
+            each com in comments
+                .mb-5.border.border-dark.px-4
+                    p #{com.uuid}
+                    p #{com.avatar}
+                    p #{com.message}
+                    p #{com.author}
+                    p #{com.createdAt}
+                    p #{com.editedAt}

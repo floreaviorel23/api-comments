@@ -46,7 +46,7 @@ function dbConnection() {
         }
     });
 }
-//dbConnection();
+dbConnection();
 
 
 
@@ -60,11 +60,9 @@ app.listen(PORT, () => {
 app.get("/", async (req, res) => {
     console.log("GET Request from /");
     try {
-        //await getAllComments();
+        await getAllComments();
         res.status(200);
-        res.render('index');
-        // res.render('index', toSend);
-        //res.send(`${JSON.stringify(comments)}`);
+         res.render('index', toSend);
     }
     catch (err) {
         console.log(err);
