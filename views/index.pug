@@ -1,3 +1,25 @@
+mixin mixinComment(com)
+    .container.mb-5.px-4
+        .row
+            h6
+                span
+                    strong #{com.author} : #{com.uuid}
+                span
+                    div.float-end
+                        button(type="button" id=`${com.uuid}` onclick=`deleteComment('${com.uuid}')` class="btn-close" aria-label="Close")
+        .row
+            .col-1 
+                h1 #{com.avatar}
+            .col-11.d-flex.align-items-center
+                div.ps-4 
+                    h5 #{com.message}
+        .row
+            .col-6
+                .small #{com.createdAt}
+            .col-6.d-flex.justify-content-end
+                .small #{com.editedAt}
+    hr
+
 doctype html
 html(lang="en")
     head
@@ -6,20 +28,45 @@ html(lang="en")
         meta(name="viewport" content="width=device-width, initial-scale=1.0")
         link(rel="shortcut icon" href="#")
         link(rel="stylesheet" type="text/css" href='./css/bootstrap.min.css')
-        link(rel="stylesheet", href="./css/myStyle.css")
-
-        title Document
+        link(rel="stylesheet" href="./css/my-style.css")
+        title Comments
     body
+        .container-fluid.text-center.py-4.bg-dark.text-white.mb-5
+            h2 Comments Page
 
-        .container.bg-primary.mt-5
-            p DADA
+        .container.mb-5
+            .row
+                .col-lg-4.empty-space
+                .content.col-lg-4.border.border-3.border-dark.rounded.px-4.py-3
+                    div
+                        h3 Add new comment
+                        hr
+                    form(action='/' method='POST')
+                        .mb-3
+                            label.form-label(for='inputAvatar') Avatar
+                            select.form-select(name='avatar')
+                                option(value='' disabled selected) Select your avatar
+                                option(value='😍') 😍
+                                option(value='🤔') 🤔
+                                option(value='😎') 😎
+                                option(value='🥱') 🥱
+                                option(value='🥶') 🥶
+                                option(value='👀') 👀
+                                option(value='🐍') 🐍
+                                option(value='🍕') 🍕
+                        .mb-3
+                            label(for='floatingTextarea') Comment
+                            .form-floating
+                            textarea.form-control(name='message' placeholder='Leave a comment here')
+                        .mb-3
+                            label.form-label(for='inputAuthor') Author
+                            input.form-control(name='author')
+                        button.btn.btn-primary(type='submit' name='submit' value='submit') Submit
+                .col-lg-4.empty-space
+
+
 
         .container
             each com in comments
-                .mb-5.border.border-dark.px-4
-                    p #{com.uuid}
-                    p #{com.avatar}
-                    p #{com.message}
-                    p #{com.author}
-                    p #{com.createdAt}
-                    p #{com.editedAt}
+                +mixinComment(com)
+                

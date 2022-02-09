@@ -1,8 +1,10 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
 const PORT = 3000;
 const path = require('path');
 app.use(express.json());
+const urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 let comments = [];
 let toSend = {};
@@ -62,7 +64,7 @@ app.get("/", async (req, res) => {
     try {
         await getAllComments();
         res.status(200);
-         res.render('index', toSend);
+        res.render('index', toSend);
     }
     catch (err) {
         console.log(err);
@@ -95,7 +97,7 @@ app.get("/:uuid", async (req, res) => {
 });
 
 
-app.post("/", async (req, res) => {
+app.post("/", urlencodedParser, async (req, res) => {
     console.log("POST Request from /");
     const [avatar, message, author] = [req.body.avatar, req.body.message, req.body.author];
 
@@ -107,7 +109,8 @@ app.post("/", async (req, res) => {
         try {
             await insertNewComment(com);
             res.status(200);
-            res.send("Comment successfuly added");
+            setTimeout(() => { }, 1000);
+            res.redirect('/');
         }
         catch (err) {
             console.log("error db : " + err);
@@ -219,8 +222,16 @@ function getComment(uuid) {
 
 // - - - - - - - - - - Push to array the values obtained from select - - - - - - - - -
 function pushCommentToArray(columns) {
-    const [uuid, avatar, message, author, createdAt, editedAt] =
-        [columns[1].value, columns[2].value, columns[3].value, columns[4].value, columns[5].value, columns[6].value];
+    const [uuid, avatar, message, author] =
+        [columns[1].value, columns[2].value, columns[3].value, columns[4].value];
+
+    let createdAt = columns[5].value;
+    createdAt = createdAt.toString();
+    createdAt = sqlToJsDate(createdAt);
+
+    let editedAt = columns[5].value;
+    editedAt = editedAt.toString();
+    editedAt = sqlToJsDate(editedAt);
 
     let com = { uuid, avatar, message, author, createdAt, editedAt };
     comments.push(com);
@@ -312,6 +323,14 @@ function updateComment(uuid, avatar, message, author) {
     });
     return prom;
 }
+
+
+function sqlToJsDate(sqlDate) {
+    sqlDate = sqlDate.toString();
+    sqlDate = sqlDate.substring(0,24);
+    return sqlDate;
+}
+
 
 // - - - - - - - - - - Using a text file instead of a database - - - - - - - - -
 /*

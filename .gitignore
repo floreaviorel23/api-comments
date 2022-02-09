@@ -7,6 +7,10 @@
 node_modules/
 dist/
 
+# For testing only
+fakedb/
+dbcon.js
+
 # Compiled Java class files
 *.class
 
