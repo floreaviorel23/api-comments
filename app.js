@@ -55,7 +55,7 @@ dbConnection();
 // - - - - - - - - - - Express routes - - - - - - - - -
 
 app.listen(PORT, () => {
-    console.log("It's alive on port : " + PORT);
+    console.log("It's alive on 192.168.0.102:" + PORT);
 });
 
 
@@ -73,6 +73,10 @@ app.get("/", async (req, res) => {
     }
 });
 
+
+app.get('/edit-form',function(req,res){
+    res.render('');
+});
 
 app.get("/:uuid", async (req, res) => {
     console.log("GET Request from /uuid");
@@ -97,7 +101,7 @@ app.get("/:uuid", async (req, res) => {
 });
 
 
-app.post("/", urlencodedParser, async (req, res) => {
+app.post("/add-new-comment", urlencodedParser, async (req, res) => {
     console.log("POST Request from /");
     const [avatar, message, author] = [req.body.avatar, req.body.message, req.body.author];
 
@@ -226,11 +230,9 @@ function pushCommentToArray(columns) {
         [columns[1].value, columns[2].value, columns[3].value, columns[4].value];
 
     let createdAt = columns[5].value;
-    createdAt = createdAt.toString();
     createdAt = sqlToJsDate(createdAt);
 
-    let editedAt = columns[5].value;
-    editedAt = editedAt.toString();
+    let editedAt = columns[6].value;
     editedAt = sqlToJsDate(editedAt);
 
     let com = { uuid, avatar, message, author, createdAt, editedAt };
@@ -242,7 +244,7 @@ function insertNewComment(comment) {
     const prom = new Promise((resolve, reject) => {
 
         let Request = require('tedious').Request;
-        let sql = `exec InsertNewComment "${comment.avatar}", "${comment.message}", "${comment.author}"`;
+        let sql = `exec InsertNewComment "${comment.avatar}", '${comment.message}', '${comment.author}'`;
 
         const dbrequest = new Request(sql, (err, rowCount) => {
             if (err) {
@@ -326,8 +328,15 @@ function updateComment(uuid, avatar, message, author) {
 
 
 function sqlToJsDate(sqlDate) {
-    sqlDate = sqlDate.toString();
-    sqlDate = sqlDate.substring(0,24);
+    sqlDate = sqlDate.toISOString().replace('Z', '').replace('T', '');
+    let date = sqlDate.substring(0, 10);
+
+    let arr = date.split('-');
+    arr = arr.reverse();
+    date = arr.join("-");
+
+    let time = sqlDate.substring(10, 18);
+    sqlDate = date + ', ' + time;
     return sqlDate;
 }
 

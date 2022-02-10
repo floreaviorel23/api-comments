@@ -1,24 +1,4 @@
-mixin mixinComment(com)
-    .container.mb-5.px-4
-        .row
-            h6
-                span
-                    strong #{com.author} : #{com.uuid}
-                span
-                    div.float-end
-                        button(type="button" id=`${com.uuid}` onclick=`deleteComment('${com.uuid}')` class="btn-close" aria-label="Close")
-        .row
-            .col-1 
-                h1 #{com.avatar}
-            .col-11.d-flex.align-items-center
-                div.ps-4 
-                    h5 #{com.message}
-        .row
-            .col-6
-                .small #{com.createdAt}
-            .col-6.d-flex.justify-content-end
-                .small #{com.editedAt}
-    hr
+include ./include/mixinComment.pug
 
 doctype html
 html(lang="en")
@@ -31,9 +11,11 @@ html(lang="en")
         link(rel="stylesheet" href="./css/my-style.css")
         title Comments
     body
+        // Title
         .container-fluid.text-center.py-4.bg-dark.text-white.mb-5
             h2 Comments Page
 
+        // Form container
         .container.mb-5
             .row
                 .col-lg-4.empty-space
@@ -41,19 +23,10 @@ html(lang="en")
                     div
                         h3 Add new comment
                         hr
-                    form(action='/' method='POST')
+                    form(action='/add-new-comment' method='POST')
                         .mb-3
                             label.form-label(for='inputAvatar') Avatar
-                            select.form-select(name='avatar')
-                                option(value='' disabled selected) Select your avatar
-                                option(value='😍') 😍
-                                option(value='🤔') 🤔
-                                option(value='😎') 😎
-                                option(value='🥱') 🥱
-                                option(value='🥶') 🥶
-                                option(value='👀') 👀
-                                option(value='🐍') 🐍
-                                option(value='🍕') 🍕
+                            include ./include/avatar-selection.pug
                         .mb-3
                             label(for='floatingTextarea') Comment
                             .form-floating
@@ -64,9 +37,8 @@ html(lang="en")
                         button.btn.btn-primary(type='submit' name='submit' value='submit') Submit
                 .col-lg-4.empty-space
 
-
-
         .container
-            each com in comments
+            each com in comments.reverse()
                 +mixinComment(com)
-                
+
+        script(src="js/index.js")
