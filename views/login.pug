@@ -1,0 +1,29 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible", content="IE=edge")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Login
+    link(rel="stylesheet", href="./css/bootstrap.min.css")
+    link(rel="stylesheet", href="./css/login-register.css")
+    link(rel="shortcut icon" href="#")
+  body
+    .container.login-container.bg-white
+      .row.text-center.mt-4
+        .login-title
+          .display-6
+            strong Login
+      .row.p-3
+        form(action="/login", method="POST")
+          .mb-4.mt-3.mx-3
+            label.form-label(for="username") Username:
+            input#username.form-control.border.rounded.border-1(type="text", placeholder="Enter username", name="username")
+          .mb-4.mx-3
+            label.form-label(for="pwd") Password:
+            input#pwd.form-control.border.rounded.border-1(type="password", placeholder="Enter password", name="pswd")
+          button.mx-3.btn.btn-primary.rounded(type="submit") Login
+          .m-3 
+            p New user? 
+              a(href="/register") Create an account
+          

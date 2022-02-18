@@ -3,8 +3,16 @@
     height: 22px;
 }
 
+.delete-icon:hover{
+    color: var(--bs-danger);
+}
+
 .edit-icon{
     width: 25px;
     height: 25px;
     margin-right: 7px;
+}
+
+.edit-icon:hover{
+    color: var(--bs-warning);
 }

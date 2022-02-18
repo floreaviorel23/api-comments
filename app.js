@@ -1,15 +1,23 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const session = require('express-session');
 const app = express();
 const PORT = 3000;
 const path = require('path');
-app.use(express.json());
+const e = require('express');
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
 
-let comments = [];
-let toSend = {};
+app.use(express.json());
+app.use(session({
+    secret: 'mySecret',
+    resave: false,
+    saveUninitialized: false
+}));
 
-// - - - - - - - - - - Load View Engine - - - - - - - - -
+let comments = [];  // Array of comments from database
+let toSend = {};    // Object to send in index.pug
+
+// - - - - - - - - - - View Engine Setup- - - - - - - - -
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
@@ -51,7 +59,6 @@ function dbConnection() {
 dbConnection();
 
 
-
 // - - - - - - - - - - Express routes - - - - - - - - -
 
 app.listen(PORT, () => {
@@ -74,9 +81,16 @@ app.get("/", async (req, res) => {
 });
 
 
-app.get('/edit-form',function(req,res){
-    res.render('');
+app.get("/login", (req, res) => {
+    res.status(200);
+    res.render('login');
 });
+
+app.get("/register", (req, res) => {
+    res.status(200);
+    res.render('register');
+});
+
 
 app.get("/:uuid", async (req, res) => {
     console.log("GET Request from /uuid");
@@ -97,7 +111,6 @@ app.get("/:uuid", async (req, res) => {
         res.status(500);
         res.send("GET request failed");
     }
-
 });
 
 
@@ -124,6 +137,12 @@ app.post("/add-new-comment", urlencodedParser, async (req, res) => {
 });
 
 
+app.post("/login", urlencodedParser, async (req, res) => {
+    const [username, pswd] = [req.body.username, req.body.pswd];
+    res.status(200).send(`Username : ${username}, Password : ${pswd}`);
+});
+
+
 
 app.delete("/:uuid", async (req, res) => {
     console.log("DELETE Request from /uuid");
@@ -146,7 +165,6 @@ app.put("/:uuid", async (req, res) => {
     console.log("GET Request from /id");
     const uuid = req.params.uuid;
     [avatar, message, author] = [req.body.avatar, req.body.message, req.body.author];
-    console.log(avatar, message, author);
 
     if ((avatar == '' && message == '' && author == '') || (!avatar && !message && !author)) {
         res.status(400);
@@ -164,6 +182,7 @@ app.put("/:uuid", async (req, res) => {
         }
     }
 });
+
 
 // - - - - - - - - - - Select all comments from db - - - - - - - - -
 function getAllComments() {
@@ -252,7 +271,7 @@ function insertNewComment(comment) {
                 //console.log("err POST : ", err);
             }
         });
-
+        
         dbrequest.on('requestCompleted', () => {
             resolve("success");
         });
@@ -326,17 +345,18 @@ function updateComment(uuid, avatar, message, author) {
     return prom;
 }
 
-
+// - - - - - - - - - - Transform sql date object into JS date - - - - - - - - -
 function sqlToJsDate(sqlDate) {
     sqlDate = sqlDate.toISOString().replace('Z', '').replace('T', '');
-    let date = sqlDate.substring(0, 10);
 
+    let date = sqlDate.substring(0, 10);
     let arr = date.split('-');
     arr = arr.reverse();
-    date = arr.join("-");
+    date = arr.join("/");
 
     let time = sqlDate.substring(10, 18);
     sqlDate = date + ', ' + time;
+
     return sqlDate;
 }
 

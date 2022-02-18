@@ -1,0 +1,53 @@
+html{
+    height: 100%;
+}
+
+body{
+    background-image: url("../images/login-bg.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+.login-title{
+    color: rgb(33, 106, 201);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+}
+
+.login-container{
+    border-radius: 10px;
+    box-shadow: 5px 5px 10px 5px #5f5959;
+    height: 385px;
+}
+
+
+.register-container{
+    height: 475px;
+}
+
+/* Big screen devices */
+@media(min-width: 967px){
+    .login-container{
+        width: 30%;
+    }
+}
+
+
+/* Medium screen devices */
+@media(min-width: 721px) and (max-width: 966px){
+    .login-container{
+        width: 55%;
+    }
+}
+
+/* Small screen devices */
+@media(max-width: 720px){
+    .login-container{
+        width: 80%;
+    }
+}

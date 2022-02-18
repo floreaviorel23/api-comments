@@ -21,13 +21,13 @@ mixin mixinComment(com)
                 // Date + (edited) + close button
                 .row 
                     span.small #{com.createdAt} 
-                        span.small(title=`last edit : ${com.editedAt}`)
+                        span.small(id=`edit-date-${com.uuid}` title=`last edit : ${com.editedAt}`)
                             strong #{messageEdit}
 
                         span
                             .float-end
                                 // Edit button + icon
-                                span(type="button" onclick=`editComment('${com.uuid}')` class="" aria-label="Edit")
+                                span(type="button" onclick=`editComment('${com.uuid}', '${com.message}')` class="" aria-label="Edit")
                                     svg.edit-icon(xmlns='http://www.w3.org/2000/svg' aria-hidden='true' role='img' width='1em' height='1em' preserveaspectratio='xMidYMid meet' viewbox='0 0 24 24')
                                         path(d='M19.045 7.401c.378-.378.586-.88.586-1.414s-.208-1.036-.586-1.414l-1.586-1.586c-.378-.378-.88-.586-1.414-.586s-1.036.208-1.413.585L4 13.585V18h4.413L19.045 7.401zm-3-3l1.587 1.585l-1.59 1.584l-1.586-1.585l1.589-1.584zM6 16v-1.585l7.04-7.018l1.586 1.586L7.587 16H6zm-2 4h16v2H4z' fill='currentColor')
 
@@ -40,5 +40,6 @@ mixin mixinComment(com)
                 // Message
                 .row 
                     div
-                        h5 #{com.message}
+                        h5(id=`message-${com.uuid}`) #{com.message}
         hr
+    
