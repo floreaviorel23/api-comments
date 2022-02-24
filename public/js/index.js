@@ -67,3 +67,43 @@ function createDate() {
     myDate = myDate.toLocaleString("en-gb");
     return myDate;
 }
+
+
+function showAddCommentForm() {
+    const addCommentForm = document.querySelector(".add-comment-form");
+
+    addCommentForm.innerHTML = `
+    <div class="col-lg-4 empty-space"></div>
+    <div class="content col-lg-4 border border-3 border-dark rounded px-4 py-3">
+      <div>
+        <h3>Add new comment</h3>
+        <hr/>
+      </div>
+      <form action="/add-new-comment" method="POST">
+        <div class="mb-3">
+          <label class="form-label" for="inputAvatar">Avatar</label>
+          <select class="form-select" name="avatar">
+          <option value="" disabled="disabled" selected="selected">Select your avatar</option>
+          <option value="😍">😍</option>
+          <option value="🤔">🤔</option>
+          <option value="😎">😎</option>
+          <option value="🥱">🥱</option>
+          <option value="🥶">🥶</option>
+          <option value="👀">👀</option>
+          <option value="🐍">🐍</option>
+          <option value="🍕">🍕</option>
+          <option value="🐒">🐒</option>
+          <option value="🐫">🐫</option>
+      </select>
+        </div>
+        <div class="mb-3">
+          <label for="floatingTextarea">Comment</label>
+          <div class="form-floating"></div>
+          <textarea class="form-control" name="message" placeholder="Leave a comment here"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit" name="submit" value="submit">Submit</button>
+      </form>
+    </div>
+    <div class="col-lg-4 empty-space"></div>`;
+
+}

@@ -1,3 +1,7 @@
+html, body{
+    box-sizing: border-box;
+}
+
 .delete-icon{
     width: 22px;
     height: 22px;
@@ -15,4 +19,15 @@
 
 .edit-icon:hover{
     color: var(--bs-warning);
+}
+
+.login-logout-span{
+    box-sizing: border-box;
+    height: 50px;
+    width: auto;
+}
+
+.login-logout-span a{
+    font-size: 1.3em;
+    text-decoration: none;
 }

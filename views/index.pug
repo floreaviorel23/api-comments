@@ -9,40 +9,45 @@ html(lang="en")
         link(rel="shortcut icon" href="#")
         link(rel="stylesheet" type="text/css" href='./css/bootstrap.min.css')
         link(rel="stylesheet" href="./css/my-style.css")
-        title Comments
+        title Comments  
     body
         // Title
-        .container-fluid.text-center.py-4.bg-dark.text-white.mb-5
-            h2 Comments Page
+        .container-fluid.py-4.bg-dark.text-white.mb-5
+            span.ms-5
+                h2.d-inline Comments Page
+            span.float-end.login-logout-span.me-4
+                if(!userName)
+                    div
+                        a(href="/login") Login here
+                else    
+                    div
+                        a(href="/logout") 
+                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1.5em" height="1.5em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1024 1024"><path fill="currentColor" d="M116.832 543.664H671.28c17.696 0 32-14.336 32-32s-14.304-32-32-32H118.832l115.76-115.76c12.496-12.496 12.496-32.752 0-45.248s-32.752-12.496-45.248 0l-189.008 194l189.008 194c6.256 6.256 14.432 9.376 22.624 9.376s16.368-3.12 22.624-9.376c12.496-12.496 12.496-32.752 0-45.248zM959.664 0H415.663c-35.36 0-64 28.656-64 64v288h64.416V103.024c0-21.376 17.344-38.72 38.72-38.72h464.72c21.391 0 38.72 17.344 38.72 38.72l1.007 818.288c0 21.376-17.328 38.72-38.72 38.72h-465.71c-21.376 0-38.72-17.344-38.72-38.72V670.944l-64.416.08V960c0 35.344 28.64 64 64 64h543.984c35.36 0 64.016-28.656 64.016-64V64c-.015-35.344-28.671-64-64.015-64z"/></svg>
 
         // Form container
         .container.mb-5
-            .row
-                .col-lg-4.empty-space
-                .content.col-lg-4.border.border-3.border-dark.rounded.px-4.py-3
-                    div
-                        h3 Add new comment
-                        hr
-                    form(action='/add-new-comment' method='POST')
-                        .mb-3
-                            label.form-label(for='inputAvatar') Avatar
-                            include ./include/avatar-selection.pug
-                        .mb-3
-                            label(for='floatingTextarea') Comment
-                            .form-floating
-                            textarea.form-control(name='message' placeholder='Leave a comment here')
-                        .mb-3
-                            label.form-label(for='inputAuthor') Author
-                            input.form-control(name='author')
-                        button.btn.btn-primary(type='submit' name='submit' value='submit') Submit
-                .col-lg-4.empty-space
+            if(userName) 
+                p Welcome back #{userName}
+            if(!userName)
+                div.text-center.mx-auto.my-5.pb-4
+                    h4 You need to be logged in in order to post a comment
+            else
+                .row.add-comment-form
+                    .col-lg-4.empty-space
+                    .content.col-lg-4.border.border-3.border-dark.rounded.px-4.py-3
+                        div
+                            h3.d-inline Add new comment
+
+                            span.float-end(type="button" onclick="showAddCommentForm()")
+                                div.d-flex.align-content-center
+                                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32"><path fill="currentColor" d="M16 4c6.6 0 12 5.4 12 12s-5.4 12-12 12S4 22.6 4 16S9.4 4 16 4m0-2C8.3 2 2 8.3 2 16s6.3 14 14 14s14-6.3 14-14S23.7 2 16 2z"/><path fill="currentColor" d="M24 15h-7V8h-2v7H8v2h7v7h2v-7h7z"/></svg>
+
 
         .container
             each com in comments.reverse()
-                +mixinComment(com)
+                +mixinComment(com, userName)
 
         script(src="js/index.js")
 
 
 
-        
