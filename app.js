@@ -6,6 +6,8 @@ const PORT = process.env.PORT || 3000;
 const path = require('path');
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
 require('dotenv').config();
+const cors = require('cors');
+app.use(cors());
 
 app.use(express.json());
 app.use(session({
