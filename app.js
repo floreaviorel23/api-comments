@@ -30,10 +30,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // - - - - - - - - - - Database config - - - - - - - - -
 let Connection = require('tedious').Connection;
 let config = {
-    server: process.env.LOCAL_IP_ADDRESS, // or "localhost"
+    server: process.env.DATABASE_ADDRESS, // or "localhost"
     options: {
         database: process.env.DATABASE_NAME,
-        encrypt: false,
+        encrypt: true,
         trustServerCertificate: true,
         rowCollectionOnDone: true
     },
@@ -64,7 +64,7 @@ dbConnection();
 // - - - - - - - - - - Express routes - - - - - - - - -
 
 app.listen(PORT, () => {
-    console.log(`It's alive on  : ${process.env.LOCAL_IP_ADDRESS}:${PORT}`);
+    console.log(`It's alive on PORT : ${PORT}`);
 });
 
 
