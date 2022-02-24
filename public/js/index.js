@@ -5,7 +5,7 @@ function deleteComment(uuid) {
         const commentDiv = document.getElementById(uuid);
         commentDiv.remove();
     }
-    xhttp.open("DELETE", `http://192.168.0.102:3000/${uuid}`);
+    xhttp.open("DELETE", `https://nodejs-comments-website.herokuapp.com/${uuid}`);
     xhttp.send();
 }
 
@@ -55,7 +55,7 @@ function editCurrentComment(uuid, newComment) {
         divEditDate.innerHTML = '<strong>(edited)</strong>';
         divEditDate.setAttribute("title", `last edit : ${dateNow}`);
     }
-    xhttp.open("PUT", `http://192.168.0.102:3000/${uuid}`);
+    xhttp.open("PUT", `https://nodejs-comments-website.herokuapp.com/${uuid}`);
     xhttp.setRequestHeader("Content-Type", "application/json");
     xhttp.send(jsedited);
 }
