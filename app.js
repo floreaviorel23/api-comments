@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const path = require('path');
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
 require('dotenv').config();
@@ -421,7 +421,7 @@ function updateComment(uuid, message) {
             message = 'NULL'
 
         let sql = `exec UpdateComment "${uuid}", "${message}"`;
-        
+
         let Request = require('tedious').Request;
         const dbrequest = new Request(sql, (err, rowCount) => {
             if (err) {
