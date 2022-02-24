@@ -5,10 +5,11 @@ const app = express();
 const PORT = 3000;
 const path = require('path');
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
+require('dotenv').config();
 
 app.use(express.json());
 app.use(session({
-    secret: 'mySecret',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false
 }));
@@ -25,12 +26,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 //app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')))
 //app.use('/css', express.static(path.join(__dirname, 'public/css')))
 
+
 // - - - - - - - - - - Database config - - - - - - - - -
 let Connection = require('tedious').Connection;
 let config = {
-    server: "192.168.0.102", // or "localhost"
+    server: process.env.LOCAL_IP_ADDRESS, // or "localhost"
     options: {
-        database: "commentsdb",
+        database: process.env.DATABASE_NAME,
         encrypt: false,
         trustServerCertificate: true,
         rowCollectionOnDone: true
@@ -38,8 +40,8 @@ let config = {
     authentication: {
         type: "default",
         options: {
-            userName: "dev123",
-            password: "dev123",
+            userName: process.env.DATABASE_ADMIN,
+            password: process.env.DATABASE_PASSWORD
         }
     }
 };
@@ -62,7 +64,7 @@ dbConnection();
 // - - - - - - - - - - Express routes - - - - - - - - -
 
 app.listen(PORT, () => {
-    console.log("It's alive on PORT : " + PORT);
+    console.log(`It's alive on  : ${process.env.LOCAL_IP_ADDRESS}:${PORT}`);
 });
 
 
