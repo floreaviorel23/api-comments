@@ -540,6 +540,7 @@ function registerNewUser(username, email, pswd) {
     return prom;
 }
 
+
 // - - - - - - - - - - Using a text file instead of a database - - - - - - - - -
 /*
 const fs = require('fs');
