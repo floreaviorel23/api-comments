@@ -144,7 +144,8 @@ app.post("/add-new-comment", urlencodedParser, async (req, res) => {
     }
     else {
         const author = req.session.userName;
-        const [avatar, message] = [req.body.avatar, req.body.message];
+        let [avatar, messageReceived] = [req.body.avatar, req.body.message];
+        let message = escapeRegExp(messageReceived);
 
         const avatarOptions = ["😍", "🤔", "😎", "🥱", "🥶", "👀", "🐍", "🍕", "🐒", "🐫"];
 
@@ -268,7 +269,8 @@ app.put("/:uuid", async (req, res) => {
         }
 
         if (req.session.userName == author) {  // Check if comment's author is the user logged in
-            message = req.body.message;
+            let messageReceived = req.body.message;
+            let message = escapeRegExp(messageReceived);
 
             if ((message == '') || (!message)) {
                 res.status(400);
@@ -372,20 +374,23 @@ function insertNewComment(comment) {
     const prom = new Promise((resolve, reject) => {
 
         let Request = require('tedious').Request;
-        let sql = `exec InsertNewComment "${comment.avatar}", '${comment.message}', '${comment.author}'`;
+        let TYPES = require('tedious').TYPES;
 
-        const dbrequest = new Request(sql, (err, rowCount) => {
+        const dbrequest = new Request('InsertNewComment', (err, rowCount) => {
             if (err) {
                 reject(err);
                 //console.log("err insertNewComment : ", err);
             }
         });
+        dbrequest.addParameter('avatar', TYPES.NVarChar, comment.avatar);
+        dbrequest.addParameter('message', TYPES.NVarChar, comment.message);
+        dbrequest.addParameter('author', TYPES.NVarChar, comment.author);
 
         dbrequest.on('requestCompleted', () => {
             resolve("success");
         });
 
-        connection.execSql(dbrequest);
+        connection.callProcedure(dbrequest);
     });
     return prom;
 }
@@ -422,22 +427,25 @@ function updateComment(uuid, message) {
         if (!message || message == '')
             message = 'NULL'
 
-        let sql = `exec UpdateComment "${uuid}", "${message}"`;
-
+        const TYPES = require('tedious').TYPES;
         let Request = require('tedious').Request;
-        const dbrequest = new Request(sql, (err, rowCount) => {
+
+        const dbrequest = new Request('UpdateComment', (err, rowCount) => {
             if (err) {
                 reject("failed updateComment");
                 //console.log("err update: ", err);
             }
         });
 
+        dbrequest.addParameter('uuid', TYPES.UniqueIdentifier, uuid);
+        dbrequest.addParameter('message', TYPES.NVarChar, message);
+
         dbrequest.on('requestCompleted', () => {
             //console.log("Request completed updateComment");
             resolve("success");
         });
 
-        connection.execSql(dbrequest);
+        connection.callProcedure(dbrequest);
     });
     return prom;
 }
@@ -542,6 +550,9 @@ function registerNewUser(username, email, pswd) {
     return prom;
 }
 
+function escapeRegExp(string) {
+    return string.replace(/[&\/\\#,+()$~%.:*?<>]/g, '\\$&'); // $& means the whole matched string
+}
 
 // - - - - - - - - - - Using a text file instead of a database - - - - - - - - -
 /*
