@@ -1,23 +1,20 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const session = require('express-session');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const path = require('path');
-const urlencodedParser = bodyParser.urlencoded({ extended: false })
-require('dotenv').config();
+const urlencodedParser = bodyParser.urlencoded({ extended: false });
 const cors = require('cors');
+require('dotenv').config();
+
+const indexRouter = require('./routes/index');
+
+app.use('/', indexRouter);
 app.use(cors());
-
 app.use(express.json());
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false
-}));
 
-let comments = [];  // Array of comments from database
 let toSendGlobal = {};    // Object to send in index.pug (contains all comments)
+module.exports.toSendGlobal = toSendGlobal;
 
 // - - - - - - - - - - View Engine Setup- - - - - - - - -
 app.set('views', path.join(__dirname, 'views'));
@@ -48,6 +45,7 @@ let config = {
     }
 };
 let connection = new Connection(config);
+module.exports.connection = connection;
 
 // - - - - - - - - - - Database connection - - - - - - - - -
 function dbConnection() {
@@ -64,33 +62,9 @@ dbConnection();
 
 
 // - - - - - - - - - - Express routes - - - - - - - - -
-
 app.listen(PORT, () => {
     console.log(`It's alive on PORT : ${PORT}`);
 });
-
-
-app.get("/", async (req, res) => {
-    console.log("GET Request from /");
-    try {
-        await getAllComments();
-
-        // Copy the content of toSendGlobal (without reference)
-        let toSendLocal = JSON.parse(JSON.stringify(toSendGlobal));
-
-        if (req.session.userName) {
-            toSendLocal.userName = req.session.userName;
-        }
-        res.status(200);
-        res.render('index', toSendLocal);
-    }
-    catch (err) {
-        console.log(err);
-        res.status(500);
-        res.send("Get request failed");
-    }
-});
-
 
 app.get("/login", (req, res) => {
     res.status(200);
@@ -110,67 +84,6 @@ app.get("/logout", (req, res) => {
     }
     else {
         res.status(400).send("Ur already logged out");
-    }
-});
-
-
-app.get("/:uuid", async (req, res) => {
-    //console.log("GET Request from /uuid");
-    const uuid = req.params.uuid;
-
-    try {
-        const result = await getComment(uuid);
-        //Checks if result is an empty javascript object
-        if (Object.keys(result).length === 0 && result.constructor === Object) {
-            res.status(400);
-            res.send("ID not found");
-        } else {
-            res.status(200);
-            res.send(`${JSON.stringify(result)}`);
-        }
-    }
-    catch (err) {
-        console.log(err);
-        res.status(500);
-        res.send("GET request failed");
-    }
-});
-
-
-app.post("/add-new-comment", urlencodedParser, async (req, res) => {
-    console.log("POST Request from /");
-    if (!req.session.userName) {
-        console.log("No user logged in");
-    }
-    else {
-        const author = req.session.userName;
-        let [avatar, messageReceived] = [req.body.avatar, req.body.message];
-        let message = escapeRegExp(messageReceived);
-
-        const avatarOptions = ["😍", "🤔", "😎", "🥱", "🥶", "👀", "🐍", "🍕", "🐒", "🐫"];
-
-        if (!avatarOptions.includes(avatar)) {
-            res.status(400).send("Cant do that chief D:");
-        }
-        else {
-            if (!avatar || !message || !author) {
-                res.status(418).send("Request missing something");
-            }
-            else {
-                let com = { avatar, message, author };
-                try {
-                    await insertNewComment(com);
-                    res.status(200);
-                    setTimeout(() => { }, 1000);
-                    res.redirect('/');
-                }
-                catch (err) {
-                    console.log("error db : " + err);
-                    res.status(500);
-                    res.send("POST Request failed");
-                }
-            }
-        }
     }
 });
 
@@ -217,254 +130,6 @@ app.post('/register', urlencodedParser, async (req, res) => {
     }
 });
 
-
-app.delete("/:uuid", async (req, res) => {
-    console.log("DELETE Request from /uuid");
-    const uuid = req.params.uuid;
-    let author;
-
-    if (req.session.userName) {
-        try {
-            author = await findAuthorsName(uuid);  // Find comment's author
-        }
-        catch (err) {
-            console.log("err delete/:uuid", err);
-        }
-
-        // Check if comment's author is the user logged in
-        if (req.session.userName == author) {
-            try {
-                const result = await removeComment(uuid);
-                res.status(200);
-                res.send("Deleted from db");
-            }
-            catch (errorMessage) {
-                console.log(errorMessage);
-                res.status(418);
-                res.send("Nu a mers");
-            }
-        }
-        else {
-            console.log("Cant delete : " + uuid);
-        }
-    }
-    else {
-        console.log("Cant delete : " + uuid);
-    }
-
-});
-
-
-app.put("/:uuid", async (req, res) => {
-    console.log("PUT Request from /uuid");
-    const uuid = req.params.uuid;
-    let author;
-
-    if (req.session.userName) {
-        try {
-            author = await findAuthorsName(uuid);    // Find comment's author
-        }
-        catch (err) {
-            console.log(err);
-        }
-
-        if (req.session.userName == author) {  // Check if comment's author is the user logged in
-            let messageReceived = req.body.message;
-            let message = escapeRegExp(messageReceived);
-
-            if ((message == '') || (!message)) {
-                res.status(400);
-                res.send("Request missing something");
-            }
-            else {
-                try {
-                    const result = await updateComment(uuid, message);
-                    res.status(200);
-                    res.send('Updated with success');
-                }
-                catch (err) {
-                    console.log(err);
-                    res.status(500).send("PUT Request failed")
-                }
-            }
-        }
-    }
-    else {
-        console.log("Cant edit : ", uuid);
-    }
-});
-
-
-// - - - - - - - - - - Select all comments from db - - - - - - - - -
-function getAllComments() {
-    const prom = new Promise((resolve, reject) => {
-        comments = [];
-        let sql = 'exec SelectAllComments';
-        let dbrequest = makeSelectRequest(sql);
-
-        dbrequest.on('row', (columns) => {
-            pushCommentToArray(columns);
-        });
-
-        dbrequest.on('requestCompleted', () => {
-            toSendGlobal.comments = comments;
-            resolve("success");
-        });
-
-        dbrequest.on('error', (err) => {
-            reject(err);
-        });
-
-        connection.execSql(dbrequest);
-    });
-    return prom;
-}
-
-function makeSelectRequest(sql) {
-    let Request = require('tedious').Request;
-    const dbrequest = new Request(sql, (err, rowCount) => {
-        if (err) {
-            //console.log("err GET");
-        }
-    });
-    return dbrequest;
-}
-
-// - - - - - - - - - - Select a single comment from db - - - - - - - - -
-function getComment(uuid) {
-    const prom = new Promise((resolve, reject) => {
-
-        let sql = `exec SelectComment "${uuid}"`;
-        let dbrequest = makeSelectRequest(sql);
-        let com = {};
-
-        dbrequest.on('row', (columns) => {
-            const [uuid, avatar, message, author, createdAt, editedAt] =
-                [columns[1].value, columns[2].value, columns[3].value, columns[4].value, columns[5].value, columns[6].value];
-            com = { uuid, avatar, message, author, createdAt, editedAt };
-        });
-
-        dbrequest.on('requestCompleted', () => {
-            //console.log("Request completed get uuid");
-            resolve(com);
-        });
-
-        connection.execSql(dbrequest);
-    });
-    return prom;
-}
-
-// - - - - - - - - - - Push to array the values obtained from select - - - - - - - - -
-function pushCommentToArray(columns) {
-    const [uuid, avatar, message, author] =
-        [columns[1].value, columns[2].value, columns[3].value, columns[4].value];
-
-    let createdAt = columns[5].value;
-    createdAt = sqlToJsDate(createdAt);
-
-    let editedAt = columns[6].value;
-    editedAt = sqlToJsDate(editedAt);
-
-    let com = { uuid, avatar, message, author, createdAt, editedAt };
-    comments.push(com);
-}
-
-// - - - - - - - - - - Insert comment into db - - - - - - - - -
-function insertNewComment(comment) {
-    const prom = new Promise((resolve, reject) => {
-
-        let Request = require('tedious').Request;
-        let TYPES = require('tedious').TYPES;
-
-        const dbrequest = new Request('InsertNewComment', (err, rowCount) => {
-            if (err) {
-                reject(err);
-                //console.log("err insertNewComment : ", err);
-            }
-        });
-        dbrequest.addParameter('avatar', TYPES.NVarChar, comment.avatar);
-        dbrequest.addParameter('message', TYPES.NVarChar, comment.message);
-        dbrequest.addParameter('author', TYPES.NVarChar, comment.author);
-
-        dbrequest.on('requestCompleted', () => {
-            resolve("success");
-        });
-
-        connection.callProcedure(dbrequest);
-    });
-    return prom;
-}
-
-
-// - - - - - - - - - - Delete comment from db - - - - - - - - -
-function removeComment(uuid) {
-    const prom = new Promise((resolve, reject) => {
-
-        let Request = require('tedious').Request;
-        let sql = `exec DeleteComment "${uuid}"`;
-
-        const dbrequest = new Request(sql, (err, rowCount) => {
-            if (err) {
-                reject("failed removeComment");
-                //console.log("err delete: ", err);
-            }
-        });
-
-        dbrequest.on('requestCompleted', () => {
-            //console.log("Request completed post");
-            resolve("success");
-        });
-
-        connection.execSql(dbrequest);
-    });
-    return prom;
-}
-
-// - - - - - - - - - - Update comment from db - - - - - - - - -
-function updateComment(uuid, message) {
-    const prom = new Promise((resolve, reject) => {
-
-        if (!message || message == '')
-            message = 'NULL'
-
-        const TYPES = require('tedious').TYPES;
-        let Request = require('tedious').Request;
-
-        const dbrequest = new Request('UpdateComment', (err, rowCount) => {
-            if (err) {
-                reject("failed updateComment");
-                //console.log("err update: ", err);
-            }
-        });
-
-        dbrequest.addParameter('uuid', TYPES.UniqueIdentifier, uuid);
-        dbrequest.addParameter('message', TYPES.NVarChar, message);
-
-        dbrequest.on('requestCompleted', () => {
-            //console.log("Request completed updateComment");
-            resolve("success");
-        });
-
-        connection.callProcedure(dbrequest);
-    });
-    return prom;
-}
-
-// - - - - - - - - - - Transform sql date object into JS date - - - - - - - - -
-function sqlToJsDate(sqlDate) {
-    sqlDate = sqlDate.toISOString().replace('Z', '').replace('T', '');
-
-    let date = sqlDate.substring(0, 10);
-    let arr = date.split('-');
-    arr = arr.reverse();
-    date = arr.join("/");
-
-    let time = sqlDate.substring(10, 18);
-    sqlDate = date + ', ' + time;
-
-    return sqlDate;
-}
-
 // - - - - - Checks if the user (username & password) exists in the database - - - - - - -
 function getUser(username, password) {
     const prom = new Promise((resolve, reject) => {
@@ -489,36 +154,6 @@ function getUser(username, password) {
                 resolve(rows);
             }
         });
-        connection.execSql(dbrequest);
-    });
-    return prom;
-}
-
-// - - - - - - - - - - Finds the comment's author (his username) - - - - - - - - - - - 
-function findAuthorsName(uuid) {
-    const prom = new Promise((resolve, reject) => {
-        let sql = `SELECT author FROM comments WHERE uuid = '${uuid}'`;
-        let author;
-
-        let Request = require('tedious').Request;
-        const dbrequest = new Request(sql, (err, rowCount) => {
-            if (err && rowCount != 1) {
-                console.log("err findAuthorsName", err);
-            }
-        });
-
-        dbrequest.on('row', (columns) => {
-            author = columns[0].value;
-        });
-
-        dbrequest.on('requestCompleted', () => {
-            resolve(author);
-        });
-
-        dbrequest.on('error', (err) => {
-            reject(err);
-        });
-
         connection.execSql(dbrequest);
     });
     return prom;
@@ -551,9 +186,10 @@ function registerNewUser(username, email, pswd) {
 }
 
 function escapeRegExp(string) {
+    string = string.replace(/\r?\n|\r/g, " ");
     return string.replace(/[&\/\\#,+()$~%.:*?<>]/g, '\\$&'); // $& means the whole matched string
 }
-
+module.exports.escapeRegExp = escapeRegExp;
 // - - - - - - - - - - Using a text file instead of a database - - - - - - - - -
 /*
 const fs = require('fs');
